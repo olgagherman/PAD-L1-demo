@@ -3,7 +3,7 @@ import collections
 import logging
 
 LOGGER = logging.getLogger(__name__)
-_MESSAGE_QUEUE = asyncio.Queue()
+_MESSAGE_QUEUE = asyncio.Queue(loop=asyncio.get_event_loop())
 
 MESSAGE_TYPES = collections.namedtuple(
     'MessageTypes', ('command', 'error', 'response')
@@ -14,6 +14,7 @@ COMMANDS = collections.namedtuple(
 
 @asyncio.coroutine
 def handle_command(command, payload):
+    LOGGER.debug('Handling command %s, payload %s', command, payload)
     if command not in COMMANDS:
         LOGGER.error('Got invalid command %s', command)
         raise ValueError('Invalid command. Should be one of %s' % (COMMANDS,))
