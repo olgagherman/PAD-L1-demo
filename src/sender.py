@@ -15,9 +15,10 @@ def send_message(message, loop):
     }).encode('utf-8')
 
     writer.write(payload)
+    writer.write_eof()
     yield from writer.drain()
 
-    response = yield from reader.read()
+    response = yield from reader.read(2048)
     writer.close()
     return response
 
