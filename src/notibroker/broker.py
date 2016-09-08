@@ -36,6 +36,7 @@ def handle_message(reader, writer):
         payload = json.dumps(response).encode('utf-8')
         writer.write(payload)
         yield from writer.drain()
+        writer.write_eof()
     except ValueError as e:
         LOGGER.exception('Cannot process the message. %s')
         send_error(writer, str(e))
