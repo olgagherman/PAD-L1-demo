@@ -42,3 +42,5 @@ and
 
 Those scripts should be run from separated terminals.And they'll provide output
 about performed operations.
+
+*Note: Instead of `python3.5` you could try to use `python3.4` if you have it.*
