@@ -30,15 +30,15 @@ Client-consumer (`src/sender.py`) polls each second for a new message **from** t
 
 To run the broker just execute the `manage.py` script
 
-`src/manage.py`
+`python3.5 src/manage.py`
 
 To start producer and respectively consumer run
 
-`src/sender.py`
+`python3.5 src/sender.py`
 
 and
 
-`src/receiver.py`
+`python3.5 src/receiver.py`
 
 Those scripts should be run from separated terminals.And they'll provide output
 about performed operations.
