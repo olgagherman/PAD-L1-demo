@@ -6,20 +6,18 @@ from .handlers import dispatch_message
 
 LOGGER = logging.getLogger(__name__)
 
-@asyncio.coroutine
-def send_error(writer, reason):
+async def send_error(writer, reason):
     message = {
         'type': 'error',
         'payload': reason
     }
     payload = json.dumps(message).encode('utf-8')
     writer.write(payload)
-    yield from writer.drain()
+    await writer.drain()
 
 
-@asyncio.coroutine
-def handle_message(reader, writer):
-    data = yield from reader.read()
+async def handle_message(reader, writer):
+    data = await reader.read()
     address = writer.get_extra_info('peername')
 
     LOGGER.debug('Recevied message from %s', address)
@@ -32,10 +30,10 @@ def handle_message(reader, writer):
         return
 
     try:
-        response = yield from dispatch_message(message)
+        response = await dispatch_message(message)
         payload = json.dumps(response).encode('utf-8')
         writer.write(payload)
-        yield from writer.drain()
+        await writer.drain()
         writer.write_eof()
     except ValueError as e:
         LOGGER.exception('Cannot process the message. %s')
