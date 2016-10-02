@@ -1,7 +1,6 @@
 import asyncio
 import collections
 import logging
-import queue
 
 LOGGER = logging.getLogger(__name__)
 _MESSAGE_QUEUE = asyncio.Queue(loop=asyncio.get_event_loop())
