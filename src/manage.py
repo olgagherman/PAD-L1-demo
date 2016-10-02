@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import logging.config
+import sched, time
 from notibroker.broker import run_server
+from notibroker.handlers import backup_messages
 
 
 logging.config.dictConfig({
@@ -28,3 +30,6 @@ logging.config.dictConfig({
 
 if __name__ == '__main__':
     run_server()
+    s = sched.scheduler(time.time, time.sleep)
+    s.enter(5, 0, backup_messages)
+    s.run()

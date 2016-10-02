@@ -13,7 +13,7 @@ async def send_message(message, loop):
         'payload': message
     }).encode('utf-8')
 
-    writer.write(payload) 
+    writer.write(payload)
     writer.write_eof()
     await writer.drain()
 
@@ -25,7 +25,7 @@ async def send_message(message, loop):
 async def run_sender(loop):
     while True:
         try:
-            message = 'Just sending a random UUID %s' % (uuid.uuid4().hex,)
+            message = 'Just sending a random %s' % (uuid.uuid4().hex,)
             print('Sending %s' % (message,))
             response = await send_message(message, loop)
             print('Received %s', response)

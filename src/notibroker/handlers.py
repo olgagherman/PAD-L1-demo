@@ -1,6 +1,7 @@
 import asyncio
 import collections
 import logging
+import queue
 
 LOGGER = logging.getLogger(__name__)
 _MESSAGE_QUEUE = asyncio.Queue(loop=asyncio.get_event_loop())
@@ -36,3 +37,9 @@ async def dispatch_message(message):
     LOGGER.debug('Dispatching command %s', command)
     response = await handle_command(command, message.get('payload'))
     return response
+
+def backup_messages():
+    with open('messages.txt', 'w') as f:
+        for i in range(_MESSAGE_QUEUE.qsize()):
+            item = yield from _MESSAGE_QUEUE.get()
+            f.write(str(item))
