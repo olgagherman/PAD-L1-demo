@@ -2,6 +2,7 @@ import asyncio
 import collections
 import logging
 import copy
+import json
 
 LOGGER = logging.getLogger(__name__)
 _MESSAGE_QUEUE = asyncio.Queue(loop=asyncio.get_event_loop())
@@ -42,8 +43,10 @@ async def dispatch_message(message):
 
 def backup_messages(loop):
     queue = copy.copy(_MESSAGE_QUEUE)
+    list = []
     with open('messages.txt', 'w') as f:
         for i in range(queue.qsize()):
-            item = queue.get_nowait()
-            f.write(str(item))
+            list.append(queue.get_nowait())
+        jsonObj = json.dumps(list)
+        f.write(jsonObj)
     loop.call_later(BACKUP_INTERVAL, backup_messages, loop)
