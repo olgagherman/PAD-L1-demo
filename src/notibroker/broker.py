@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 
-from .handlers import dispatch_message
+from .handlers import dispatch_message, backup_messages, BACKUP_INTERVAL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ def run_server(hostname='localhost', port=14141, loop=None):
         loop = asyncio.get_event_loop()
     coro = asyncio.start_server(handle_message, hostname, port, loop=loop)
     server = loop.run_until_complete(coro)
+    loop.call_later(BACKUP_INTERVAL, backup_messages, loop)
     LOGGER.info('Serving on %s', server.sockets[0].getsockname())
     LOGGER.info('Press Ctrl + C to stop the application')
     try:
