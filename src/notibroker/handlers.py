@@ -12,6 +12,8 @@ COMMANDS = collections.namedtuple(
     'Commands', ('send', 'read')
 )(*('send', 'read'))
 
+BACKUP_INTERVAL = 5
+
 async def handle_command(command, payload):
     LOGGER.debug('Handling command %s, payload %s', command, payload)
     if command not in COMMANDS:
