@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 
-from .handlers import dispatch_message, backup_messages, BACKUP_INTERVAL
+from .handlers import dispatch_message, backup_messages, BACKUP_INTERVAL, loading_messages
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +44,7 @@ async def handle_message(reader, writer):
 def run_server(hostname='localhost', port=14141, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
+    loop.run_until_complete(loading_messages())
     coro = asyncio.start_server(handle_message, hostname, port, loop=loop)
     server = loop.run_until_complete(coro)
     loop.call_later(BACKUP_INTERVAL, backup_messages, loop)
