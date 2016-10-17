@@ -1,9 +1,8 @@
 import asyncio
 import collections
 import logging
-import copy
 import json
-import os
+from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 #_MESSAGE_QUEUE = asyncio.Queue(loop=asyncio.get_event_loop())
@@ -27,7 +26,10 @@ async def handle_command(command, payload):
         _MESSAGE_QUEUE.append(payload)
         msg = 'OK'
     elif command == COMMANDS.read:
-        msg = _MESSAGE_QUEUE.popleft()
+        if _MESSAGE_QUEUE:
+            msg = _MESSAGE_QUEUE.popleft()
+        else:
+            msg = "The queue is empty"
     return {
         'type': MESSAGE_TYPES.response,
         'payload': msg
@@ -55,11 +57,12 @@ def backup_messages(loop):
     loop.call_later(BACKUP_INTERVAL, backup_messages, loop)
 
 async def loading_messages():
-    with open('messages.txt', 'r') as f:
-        data = json.load(f)
-    if data == None:
-        print ("Empty file")
-    else:
+    path_file = Path('messages.txt');
+    if path_file.is_file():
+        with open('messages.txt', 'r') as f:
+            data = json.load(f)
         for message in data:
             if message != '':
                 _MESSAGE_QUEUE.append(message)
+    else:
+        LOGGER.error("File does not exist");
