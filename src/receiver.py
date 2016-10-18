@@ -4,12 +4,10 @@ import json
 from pathlib import Path
 import random
 
-async def get_message(loop, name):
+async def get_message(loop, name, persistent):
     reader, writer = await asyncio.open_connection(
         '127.0.0.1', 14141, loop=loop
     )
-    bools = [True, False]
-    persistent = random.shuffle(bools)
     writer.write(json.dumps({
         'type': 'command',
         'command': 'read',
@@ -42,11 +40,16 @@ async def get_destination_name():
 
 async def run_receiver(loop):
     name = await get_destination_name()
+    int_number = random.randint(1, 2)
+    persistent = False
+    if int_number == 1:
+        persistent = True
+    print(persistent)
     while True:
         try:
-            response = await get_message(loop, name)
+            response = await get_message(loop, name, persistent)
             print('Received %s', response)
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
         except KeyboardInterrupt:
             break
 
