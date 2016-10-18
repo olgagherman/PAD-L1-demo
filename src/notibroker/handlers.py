@@ -2,11 +2,11 @@ import asyncio
 import collections
 import logging
 import json
+import copy
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
-#_MESSAGE_QUEUE = asyncio.Queue(loop=asyncio.get_event_loop())
-_MESSAGE_QUEUE = collections.deque()
+_MESSAGE_QUEUE = dict()
 
 MESSAGE_TYPES = collections.namedtuple(
     'MessageTypes', ('command', 'error', 'response')
@@ -17,21 +17,30 @@ COMMANDS = collections.namedtuple(
 
 BACKUP_INTERVAL = 10
 
-async def handle_command(command, payload):
-    LOGGER.debug('Handling command %s, payload %s', command, payload)
+async def handle_command(message):
+    command = message.get('command')
+    destination = message.get('destination')
+    LOGGER.debug('Handling command %s', command)
     if command not in COMMANDS:
         LOGGER.error('Got invalid command %s', command)
         raise ValueError('Invalid command. Should be one of %s' % (COMMANDS,))
     if command == COMMANDS.send:
-        _MESSAGE_QUEUE.append(payload)
+        payload = message.get('payload')
+        #verify if the queue exists
+        if _MESSAGE_QUEUE.get(destination) == None:
+            _MESSAGE_QUEUE[destination] = collections.deque()
+            LOGGER.debug('Created new queue for receiver %s', destination)
+        _MESSAGE_QUEUE[destination].append(payload)
         msg = 'OK'
     elif command == COMMANDS.read:
-        if _MESSAGE_QUEUE:
-            msg = _MESSAGE_QUEUE.popleft()
+        persistent_queue = message.get('persistent_queue')
+        if len(_MESSAGE_QUEUE[destination]) > 0:
+            msg = _MESSAGE_QUEUE[destination].popleft()
         else:
-            msg = "The queue is empty"
+            msg = "Queue is empty"
     return {
         'type': MESSAGE_TYPES.response,
+        'destination': destination,
         'payload': msg
     }
 
@@ -42,17 +51,18 @@ async def dispatch_message(message):
         LOGGER.error('Got invalid message type %s', message_type)
         raise ValueError('Invalid message type. Should be %s' % (MESSAGE_TYPES.command,))
     LOGGER.debug('Dispatching command %s', command)
-    response = await handle_command(command, message.get('payload'))
+    response = await handle_command(message)
     return response
 
 def backup_messages(loop):
     #import ipdb; ipdb.set_trace()
-    queue = collections.deque(_MESSAGE_QUEUE)
-    queue_size = len(queue)
-    LOGGER.debug("Copied queue with size %s", queue_size)
-    list_q = list(queue)
+    #queue = collections.deque(_MESSAGE_QUEUE)
+    dictionary = copy.deepcopy(_MESSAGE_QUEUE)
+    #queue_size = len(queue)
+    LOGGER.debug("Copied queue")
+    #list_q = list(queue)
     with open('messages.txt', 'w') as f:
-        jsonObj = json.dumps(list_q, indent = 2)
+        jsonObj = json.dumps(dictionary, indent = 2)
         f.write(jsonObj)
     loop.call_later(BACKUP_INTERVAL, backup_messages, loop)
 
@@ -63,6 +73,6 @@ async def loading_messages():
             data = json.load(f)
         for message in data:
             if message != '':
-                _MESSAGE_QUEUE.append(message)
+                _MESSAGE_QUEUE[destination].append(message)
     else:
         LOGGER.error("File does not exist");
