@@ -15,7 +15,7 @@ COMMANDS = collections.namedtuple(
     'Commands', ('send', 'read')
 )(*('send', 'read'))
 
-BACKUP_INTERVAL = 10
+BACKUP_INTERVAL = 5
 
 async def handle_command(message):
     command = message.get('command')
@@ -33,10 +33,11 @@ async def handle_command(message):
         _MESSAGE_QUEUE[destination].append(payload)
         msg = 'OK'
     elif command == COMMANDS.read:
-        persistent_queue = message.get('persistent_queue')
         if destination in _MESSAGE_QUEUE:
             if len(_MESSAGE_QUEUE[destination]) > 0:
                 msg = _MESSAGE_QUEUE[destination].popleft()
+                if len(_MESSAGE_QUEUE[destination]) == 0 and not message.get('persistent_queue'):
+                        _MESSAGE_QUEUE.pop(destination, None)
             else:
                 msg = "Queue is empty"
         else:
@@ -59,11 +60,10 @@ async def dispatch_message(message):
 
 def backup_messages(loop):
     #import ipdb; ipdb.set_trace()
-    #queue = collections.deque(_MESSAGE_QUEUE)
-    dictionary = copy.deepcopy(_MESSAGE_QUEUE)
-    #queue_size = len(queue)
-    LOGGER.debug("Copied queue")
-    #list_q = list(queue)
+    dictionary = dict()
+    for i, val in _MESSAGE_QUEUE.items():
+        dictionary[i] = list(val)
+        LOGGER.debug("Copied queue for receiver %s", i)
     with open('messages.txt', 'w') as f:
         jsonObj = json.dumps(dictionary, indent = 2)
         f.write(jsonObj)
@@ -74,8 +74,7 @@ async def loading_messages():
     if path_file.is_file():
         with open('messages.txt', 'r') as f:
             data = json.load(f)
-        for message in data:
-            if message != '':
-                _MESSAGE_QUEUE[destination].append(message)
+        for i, queue in data.items():
+            _MESSAGE_QUEUE[i] = collections.deque(queue)
     else:
         LOGGER.error("File does not exist");
