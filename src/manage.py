@@ -8,7 +8,7 @@ logging.config.dictConfig({
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s | %(asctime)s | %(name)s:%(funcName)s | %(process)d | %(thread)d | %(message)s'
+            'format': '%(levelname)s | %(asctime)s | %(name)s:%(funcName)s | %(message)s'
         },
     },
     'handlers': {
