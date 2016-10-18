@@ -34,10 +34,13 @@ async def handle_command(message):
         msg = 'OK'
     elif command == COMMANDS.read:
         persistent_queue = message.get('persistent_queue')
-        if len(_MESSAGE_QUEUE[destination]) > 0:
-            msg = _MESSAGE_QUEUE[destination].popleft()
+        if destination in _MESSAGE_QUEUE:
+            if len(_MESSAGE_QUEUE[destination]) > 0:
+                msg = _MESSAGE_QUEUE[destination].popleft()
+            else:
+                msg = "Queue is empty"
         else:
-            msg = "Queue is empty"
+            msg = "Queue does not exist"
     return {
         'type': MESSAGE_TYPES.response,
         'destination': destination,
