@@ -16,19 +16,30 @@ Example of the structure for a `notibroker` message:
 ```json
 {
     "type": "command",
-    "command": "<send|read>",
+    "command": "<send>",
+    "destination":"receiver",
     "payload": "<payload>"
 }
 ```
 ```json
 {
+    "type": "command",
+    "command": "<read>",
+    "destination":"receiver",
+    "persistent_queue": "<True|False>"
+}
+```
+```json
+{
     "type": "response",
+    "destination": "receiver",
     "payload": "<payload>"
 }
 ```
 ```json
 {
     "type": "error",
+    "destination": "receiver",
     "payload": "<payload>"
 }
 ```
