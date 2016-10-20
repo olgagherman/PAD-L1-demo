@@ -7,6 +7,7 @@ from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 _MESSAGE_QUEUE = dict()
+_PERSISTENT_DESTINATION = []
 
 MESSAGE_TYPES = collections.namedtuple(
     'MessageTypes', ('command', 'error', 'response')
@@ -16,6 +17,13 @@ COMMANDS = collections.namedtuple(
 )(*('send', 'read'))
 
 BACKUP_INTERVAL = 5
+
+def add_for_backup(message):
+    persistent = message.get('persistent_queue')
+    if persistent:
+        receiver = message.get('destination')
+        if receiver not in _PERSISTENT_DESTINATION:
+            _PERSISTENT_DESTINATION.append(receiver)
 
 async def handle_command(message):
     command = message.get('command')
@@ -33,6 +41,7 @@ async def handle_command(message):
         _MESSAGE_QUEUE[destination].append(payload)
         msg = 'OK'
     elif command == COMMANDS.read:
+        add_for_backup(message)
         if destination in _MESSAGE_QUEUE:
             if len(_MESSAGE_QUEUE[destination]) > 0:
                 msg = _MESSAGE_QUEUE[destination].popleft()
@@ -62,8 +71,9 @@ def backup_messages(loop):
     #import ipdb; ipdb.set_trace()
     dictionary = dict()
     for i, val in _MESSAGE_QUEUE.items():
-        dictionary[i] = list(val)
-        LOGGER.debug("Copied queue for receiver %s", i)
+        if i in _PERSISTENT_DESTINATION:
+            dictionary[i] = list(val)
+            LOGGER.debug("Copied queue for receiver %s", i)
     with open('messages.txt', 'w') as f:
         jsonObj = json.dumps(dictionary, indent = 2)
         f.write(jsonObj)
